@@ -1,4 +1,4 @@
-package org.thatmadhacker.finlayscript6;
+package org.thatmadhacker.finlayscript6.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,6 +10,7 @@ public class Environment {
 	private static final String DEFAULT_PATH = "/usr/share/FS6/modules/:$DIR/modules/";
 	private String path;
 	private Map<String,Module> libMethods = new HashMap<String,Module>();
+	private TypeManager typeManager = new TypeManager();
 	public static Environment createDefaultEnv() {
 		File dir = new File(".");
 		String path = DEFAULT_PATH.replaceAll("$DIR", dir.getAbsolutePath());
@@ -45,5 +46,14 @@ public class Environment {
 	}
 	public void addLibMethod(String method, Module module) {
 		libMethods.put(method, module);
+	}
+	public TypeManager getTypeManager() {
+		return typeManager;
+	}
+	public boolean containsLibMethod(String name) {
+		return libMethods.containsKey(name);
+	}
+	public Map<String, Module> getLibMethods() {
+		return libMethods;
 	}
 }

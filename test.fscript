@@ -1,0 +1,7 @@
+test = "hi"
+testMethod(){
+global test2 = "test2"
+}
+testMethod()
+#comments work with this
+//or with this

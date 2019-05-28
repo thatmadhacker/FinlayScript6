@@ -1,4 +1,4 @@
-package org.thatmadhacker.finlayscript6;
+package org.thatmadhacker.finlayscript6.core;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class Module {
 			program.getEnv().addLibMethod(method,this);
 		}
 	}
-	public FS6Object execMethod() {
+	public FS6Object execMethod(String method, String[] args) {
 		//TODO: write module interface
 		return null;
 	}

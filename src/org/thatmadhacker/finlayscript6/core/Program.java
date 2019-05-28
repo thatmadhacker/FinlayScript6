@@ -1,4 +1,4 @@
-package org.thatmadhacker.finlayscript6;
+package org.thatmadhacker.finlayscript6.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,12 +13,12 @@ public class Program {
 	private List<Method> methods = new ArrayList<Method>();
 	private List<String> lines;
 	private Environment env;
+	private FS6Object currReturnVal;
 	private boolean returned = false;
 	public Program(List<String> lines, Environment env) throws Exception {
 		super();
 		this.lines = lines;
 		this.env = env;
-		Interpreter.setupProgram(this);
 	}
 	public Map<String, FS6Object> getGlobalVars() {
 		return globalVars;
@@ -58,5 +58,27 @@ public class Program {
 	}
 	public void setReturned(boolean returned) {
 		this.returned = returned;
+	}
+	public Method getMethod(String name) throws Exception{
+		for(Method m : methods) {
+			if(m.getName().equals(name)) {
+				return m;
+			}
+		}
+		throw new Exception("Method "+name+" not found!");
+	}
+	public boolean containsMethod(String name) {
+		for(Method m : methods) {
+			if(m.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	public FS6Object getCurrReturnVal() {
+		return currReturnVal;
+	}
+	public void setCurrReturnVal(FS6Object currReturnVal) {
+		this.currReturnVal = currReturnVal;
 	}
 }

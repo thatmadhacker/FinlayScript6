@@ -1,4 +1,4 @@
-package org.thatmadhacker.finlayscript6;
+package org.thatmadhacker.finlayscript6.core;
 
 public class FS6Object {
 	private int type;
