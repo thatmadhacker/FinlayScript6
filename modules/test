@@ -1,0 +1,14 @@
+#!/bin/python
+import time
+print("test")
+print("END")
+
+print("allocType test1234")
+type = input()
+
+while 1:
+	inM = input()
+	while input() != "END":
+		sleep(1)
+	if inM == "test":
+		print("return test123 "+type+" 0")

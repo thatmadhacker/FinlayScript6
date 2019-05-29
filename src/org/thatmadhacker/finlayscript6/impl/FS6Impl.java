@@ -13,6 +13,7 @@ public class FS6Impl {
 		Program program = Interpreter.createProgram(lines);
 		Interpreter.setupProgram(program);
 		ProgramResult result = Interpreter.execProgram(program);
+		Interpreter.close(program);
 		System.out.println("Local vars: \n\n");
 		for(String s : result.getLocalVariables().keySet()) {
 			System.out.println("Name: "+s+" Type: "+result.getLocalVariables().get(s).getType()+" - "+
@@ -24,6 +25,10 @@ public class FS6Impl {
 			System.out.println("Name: "+s+" Type: "+result.getGlobalVariables().get(s).getType()+" - "+
 					program.getEnv().getTypeManager().getTypes().get(result.getGlobalVariables().get(s).getType())+
 					" Value: "+result.getGlobalVariables().get(s).getValue().toString());
+		}
+		System.out.println("\n\nLibrary methods: \n\n");
+		for(String s : program.getEnv().getLibMethods().keySet()) {
+			System.out.println("Name: "+s+" Module: "+program.getEnv().getLibMethods().get(s).getF().getPath());
 		}
 	}
 }

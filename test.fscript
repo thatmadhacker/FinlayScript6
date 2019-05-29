@@ -1,7 +1,9 @@
+#include test
 test = "hi"
 testMethod(){
 global test2 = "test2"
 }
 testMethod()
+test2 = test()
 #comments work with this
 //or with this

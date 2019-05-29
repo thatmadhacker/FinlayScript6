@@ -2,7 +2,9 @@ package org.thatmadhacker.finlayscript6.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Environment {
@@ -11,9 +13,10 @@ public class Environment {
 	private String path;
 	private Map<String,Module> libMethods = new HashMap<String,Module>();
 	private TypeManager typeManager = new TypeManager();
+	private List<Module> modules = new ArrayList<Module>();
 	public static Environment createDefaultEnv() {
 		File dir = new File(".");
-		String path = DEFAULT_PATH.replaceAll("$DIR", dir.getAbsolutePath());
+		String path = DEFAULT_PATH.replaceAll("\\$DIR", dir.getPath());
 		return new Environment(path);
 	}
 	public Environment(String path) {
@@ -29,6 +32,10 @@ public class Environment {
 		for(String s : pathS) {
 			File dir = new File(s);
 			
+			if(!dir.exists()) {
+				continue;
+			}
+			
 			for(File f : dir.listFiles()) {
 				String moduleName = f.getName();
 				if(f.getName().split("-").length > 0) {
@@ -37,6 +44,7 @@ public class Environment {
 				if(moduleName.equals(name)) {
 					Module module = new Module(f,p);
 					module.init();
+					modules.add(module);
 					return module;
 				}
 			}
@@ -55,5 +63,8 @@ public class Environment {
 	}
 	public Map<String, Module> getLibMethods() {
 		return libMethods;
+	}
+	public List<Module> getModules() {
+		return modules;
 	}
 }

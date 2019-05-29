@@ -9,15 +9,16 @@ import java.util.Scanner;
 
 public class Interpreter {
 
-	public static List<String> loadProgram(File file) throws Exception{
+	public static List<String> loadProgram(File file) throws Exception {
 		Scanner in = new Scanner(file);
 		List<String> list = new ArrayList<String>();
-		while(in.hasNextLine()) {
+		while (in.hasNextLine()) {
 			list.add(in.nextLine());
 		}
 		in.close();
 		return list;
 	}
+
 	public static Program createProgram(List<String> lines) throws Exception {
 		return new Program(lines, Environment.createDefaultEnv());
 	}
@@ -42,7 +43,7 @@ public class Interpreter {
 
 	private static ProgramResult execMethod(Method method, Program program) throws Exception {
 		program.setReturned(false);
-		program.setCurrReturnVal(new FS6Object(TypeManager.TYPE_NONE,null));
+		program.setCurrReturnVal(new FS6Object(TypeManager.TYPE_NONE, null));
 		Map<String, FS6Object> localVars = program.getLocalVars();
 		program.setLocalVars(new HashMap<String, FS6Object>());
 		for (int i = 0; i < method.getLines().size(); i++) {
@@ -53,13 +54,18 @@ public class Interpreter {
 		}
 		FS6Object returnVal = program.getCurrReturnVal();
 		ProgramResult result = new ProgramResult(program.getReturnVal(), program.getGlobalVars(),
-				program.getLocalVars(),returnVal);
+				program.getLocalVars(), returnVal);
 		program.setLocalVars(localVars);
 		return result;
 	}
 
 	private static int execLine(String line, int index, Program program, Method method) throws Exception {
-		if(line.startsWith("//") || line.startsWith("#")) {
+		if (line.startsWith("#include")) {
+			String module = line.replaceFirst("#include", "").trim();
+			program.getEnv().loadModule(module, program);
+			return 0;
+		}
+		if (line.startsWith("//") || line.startsWith("#")) {
 			return 0;
 		}
 		if (line.contains("=")) {
@@ -68,8 +74,8 @@ public class Interpreter {
 			if (variable.split(" ", 2).length > 1) {
 				global = true;
 			}
-			if(global) {
-				variable = variable.split(" ",2)[1];
+			if (global) {
+				variable = variable.split(" ", 2)[1];
 			}
 			String eval = line.split("=", 2)[1].trim();
 			FS6Object obj = eval(eval, index, program);
@@ -86,11 +92,11 @@ public class Interpreter {
 	}
 
 	private static FS6Object eval(String eval, int line, Program program) throws Exception {
-		if(!eval.contains("(")) {
-			if(isInt(eval)) {
+		if (!eval.contains("(")) {
+			if (isInt(eval)) {
 				return new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(eval));
-			}else {
-				return new FS6Object(TypeManager.TYPE_STRING,eval.replaceAll("\"", ""));
+			} else {
+				return new FS6Object(TypeManager.TYPE_STRING, eval.replaceAll("\"", ""));
 			}
 		}
 		String methodName = eval.split("\\(", 2)[0].trim();
@@ -185,20 +191,21 @@ public class Interpreter {
 				ProgramResult result = execMethod(method, program);
 				program.setLocalVars(localVars);
 				return result.getReturnVal();
-			}else if(program.getEnv().containsLibMethod(methodName)){
-				return program.getEnv().getLibMethods().get(methodName).execMethod(methodName, splitNonQuotesA(methodArgs, ","));
-			}else {
-				throw new Exception("Method "+methodName+" not found!!!");
+			} else if (program.getEnv().containsLibMethod(methodName)) {
+				return program.getEnv().getLibMethods().get(methodName).execMethod(methodName,
+						splitNonQuotesA(methodArgs, ","));
+			} else {
+				throw new Exception("Method " + methodName + " not found!!!");
 			}
 		}
-		//TODO: add import statements so it runs quicker
+		// TODO: add import statements so it runs quicker
 	}
 
 	private static Map<String, FS6Object> parseArgs(String args, String methodArgs, Program program) {
 		Map<String, FS6Object> returnVal = new HashMap<String, FS6Object>();
 		List<String> args2 = splitNonQuotes(args, ",");
 		String[] methodArgs2 = methodArgs.trim().split(",");
-		if(methodArgs2[0].equals("")) {
+		if (methodArgs2[0].equals("")) {
 			methodArgs2 = new String[0];
 		}
 		for (int i = 0; i < methodArgs2.length; i++) {
@@ -228,7 +235,7 @@ public class Interpreter {
 	}
 
 	@SuppressWarnings("unused")
-	private static boolean isInt(String s) {
+	static boolean isInt(String s) {
 		try {
 			int i = Integer.valueOf(s);
 			return true;
@@ -237,9 +244,9 @@ public class Interpreter {
 		}
 	}
 
-	private static List<String> splitNonQuotes(String s, String s1) {
+	static List<String> splitNonQuotes(String s, String s1) {
 		List<String> ret = new ArrayList<String>();
-		if(s.length() == 0) {
+		if (s.length() == 0) {
 			return ret;
 		}
 		boolean quotes = false;
@@ -258,10 +265,11 @@ public class Interpreter {
 		ret.add(s.substring(start, s.length() - 1));
 		return ret;
 	}
-	private static String[] splitNonQuotesA(String s, String s1) {
+
+	static String[] splitNonQuotesA(String s, String s1) {
 		List<String> list = splitNonQuotes(s, s1);
 		String[] array = new String[list.size()];
-		for(int i = 0; i < list.size(); i++) {
+		for (int i = 0; i < list.size(); i++) {
 			array[i] = list.get(i);
 		}
 		return array;
@@ -296,7 +304,7 @@ public class Interpreter {
 				Method method = new Method(lines, name, args);
 				p.getMethods().add(method);
 				count = 0;
-				i += lines.size()+1;
+				i += lines.size() + 1;
 				continue;
 			} else if (count == 0) {
 				nonMethodLines.add(line);
@@ -317,5 +325,16 @@ public class Interpreter {
 			}
 		}
 		return count + diff;
+	}
+
+	public static void close(Program program) {
+		for (Module m : program.getEnv().getModules()) {
+			try {
+				m.join();
+				m.getChildProc().destroy();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
