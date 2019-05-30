@@ -35,17 +35,18 @@ public class Interpreter {
 
 		for (Method m : p.getMethods()) {
 			if (m.getName().equals(method)) {
-				return execMethod(m, p);
+				return execMethod(m, p, "");
 			}
 		}
 		throw new Exception("Method not found!");
 	}
 
-	private static ProgramResult execMethod(Method method, Program program) throws Exception {
+	private static ProgramResult execMethod(Method method, Program program, String args) throws Exception {
 		program.setReturned(false);
 		program.setCurrReturnVal(new FS6Object(TypeManager.TYPE_NONE, null));
 		Map<String, FS6Object> localVars = program.getLocalVars();
-		program.setLocalVars(new HashMap<String, FS6Object>());
+		Map<String,FS6Object> args2 = parseArgs(args, method.getArgs(), program);
+		program.setLocalVars(args2);
 		for (int i = 0; i < method.getLines().size(); i++) {
 			i += execLine(method.getLines().get(i), i, program, method);
 			if (program.isReturned()) {
@@ -185,20 +186,25 @@ public class Interpreter {
 			if (program.containsMethod(methodName)) {
 				Method method = program.getMethod(methodName);
 				String methodArgs2 = method.getArgs();
-				Map<String, FS6Object> args = parseArgs(methodArgs, methodArgs2, program);
-				Map<String, FS6Object> localVars = program.getLocalVars();
-				program.setLocalVars(args);
-				ProgramResult result = execMethod(method, program);
-				program.setLocalVars(localVars);
+				ProgramResult result = execMethod(method, program, methodArgs2);
 				return result.getReturnVal();
 			} else if (program.getEnv().containsLibMethod(methodName)) {
-				return program.getEnv().getLibMethods().get(methodName).execMethod(methodName,
-						splitNonQuotesA(methodArgs, ","));
+				String newMethodArgs = "";
+				for (int i1 = 0; i1 < splitNonQuotesA(methodArgs, ",").length; i1++) {
+					newMethodArgs += i1 + ",";
+				}
+				if(newMethodArgs.length() > 0)
+					newMethodArgs = newMethodArgs.substring(0, newMethodArgs.length() - 1);
+				Map<String, FS6Object> mArgs = parseArgs(methodArgs, newMethodArgs, program);
+				List<FS6Object> mArgs2 = new ArrayList<FS6Object>();
+				for (String s : mArgs.keySet()) {
+					mArgs2.add(mArgs.get(s));
+				}
+				return program.getEnv().getLibMethods().get(methodName).execMethod(methodName, mArgs2);
 			} else {
 				throw new Exception("Method " + methodName + " not found!!!");
 			}
 		}
-		// TODO: add import statements so it runs quicker
 	}
 
 	private static Map<String, FS6Object> parseArgs(String args, String methodArgs, Program program) {
@@ -208,28 +214,97 @@ public class Interpreter {
 		if (methodArgs2[0].equals("")) {
 			methodArgs2 = new String[0];
 		}
-		for (int i = 0; i < methodArgs2.length; i++) {
+		for (int i = 0; i < (methodArgs2.length < args2.size() ? methodArgs2.length : args2.size()); i++) {
 			String name = methodArgs2[i];
 			String arg = args2.get(i);
-			boolean localVariable = program.getLocalVars().containsKey(arg);
-			boolean globalVariable = program.getGlobalVars().containsKey(arg);
+			String[] args3 = arg.split("+");
+			String curr = "";
+			int type = -1;
+			for (String s : args3) {
+				boolean localVariable = program.getLocalVars().containsKey(s);
+				boolean globalVariable = program.getGlobalVars().containsKey(s);
+				if (s.contains("(")) {
 
-			if (localVariable) {
-				FS6Object var = program.getLocalVars().get(arg);
-				returnVal.put(name, var);
-			} else if (globalVariable) {
-				FS6Object var = program.getGlobalVars().get(arg);
-				returnVal.put(name, var);
-			} else {
-				boolean integer = isInt(arg);
-				if (integer) {
-					FS6Object var = new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(arg));
-					returnVal.put(name, var);
+					String methodName = s.split("\\(")[0];
+					String argsString = s.split("\\(")[1];
+					argsString = argsString.substring(0, argsString.lastIndexOf(")"));
+
+					if (program.getEnv().getLibMethods().containsKey(methodName)) {
+						String newMethodArgs = "";
+						for (int i1 = 0; i1 < splitNonQuotesA(argsString, ",").length; i1++) {
+							newMethodArgs += i1 + ",";
+						}
+						newMethodArgs = newMethodArgs.substring(0, newMethodArgs.length() - 1);
+						Map<String, FS6Object> methodArgs3 = parseArgs(argsString, newMethodArgs, program);
+						List<FS6Object> mArgs2 = new ArrayList<FS6Object>();
+						for (String s1 : methodArgs3.keySet()) {
+							mArgs2.add(methodArgs3.get(s1));
+						}
+						FS6Object var = program.getEnv().getLibMethods().get(methodName).execMethod(methodName, mArgs2);
+						curr += var;
+						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+							type = TypeManager.TYPE_STRING;
+						} else if (type == -1) {
+							type = var.getType();
+						}
+					}else{
+						try {
+							ProgramResult result = execMethod(program.getMethod(methodName), program,argsString);
+							FS6Object var = result.getReturnVal();
+							curr += var;
+							if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+								type = TypeManager.TYPE_STRING;
+							} else if (type == -1) {
+								type = var.getType();
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				} else if (localVariable) {
+					FS6Object var = program.getLocalVars().get(arg);
+					curr += var;
+					if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+						type = TypeManager.TYPE_STRING;
+					} else if (type == -1) {
+						type = var.getType();
+					}
+				} else if (globalVariable) {
+					FS6Object var = program.getGlobalVars().get(arg);
+					curr += var;
+					if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+						type = TypeManager.TYPE_STRING;
+					} else if (type == -1) {
+						type = var.getType();
+					}
 				} else {
-					FS6Object var = new FS6Object(TypeManager.TYPE_STRING, arg.replaceAll("\"", ""));
-					returnVal.put(name, var);
+					boolean integer = isInt(arg);
+					if (integer) {
+						FS6Object var = new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(arg));
+						curr += var;
+						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+							type = TypeManager.TYPE_STRING;
+						} else if (type == -1) {
+							type = var.getType();
+						}
+					} else {
+						FS6Object var = new FS6Object(TypeManager.TYPE_STRING, arg.replaceAll("\"", ""));
+						curr += var;
+						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+							type = TypeManager.TYPE_STRING;
+						} else if (type == -1) {
+							type = var.getType();
+						}
+					}
 				}
 			}
+			Object curr1;
+			if (type == TypeManager.TYPE_INTEGER) {
+				curr1 = Integer.valueOf(curr);
+			} else {
+				curr1 = curr;
+			}
+			returnVal.put(name, new FS6Object(type, curr1));
 		}
 		return returnVal;
 	}
@@ -262,7 +337,7 @@ public class Interpreter {
 				ret.add(s3);
 			}
 		}
-		ret.add(s.substring(start, s.length() - 1));
+		ret.add(s.substring(start));
 		return ret;
 	}
 
@@ -330,8 +405,7 @@ public class Interpreter {
 	public static void close(Program program) {
 		for (Module m : program.getEnv().getModules()) {
 			try {
-				m.join();
-				m.getChildProc().destroy();
+				m.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

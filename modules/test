@@ -1,5 +1,6 @@
 #!/bin/python
 import time
+input()
 print("test")
 print("END")
 
@@ -8,7 +9,6 @@ type = input()
 
 while 1:
 	inM = input()
-	while input() != "END":
-		sleep(1)
+	input()
 	if inM == "test":
 		print("return test123 "+type+" 0")

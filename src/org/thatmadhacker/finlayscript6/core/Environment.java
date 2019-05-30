@@ -67,4 +67,12 @@ public class Environment {
 	public List<Module> getModules() {
 		return modules;
 	}
+	public Module getModule(String moduleName) throws Exception{
+		for(Module m : modules) {
+			if(m.getF().getName().equals(moduleName)) {
+				return m;
+			}
+		}
+		throw new Exception("Moduke "+moduleName+" not found!");
+	}
 }
