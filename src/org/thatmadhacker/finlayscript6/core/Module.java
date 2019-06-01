@@ -116,6 +116,42 @@ public class Module extends Thread {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+				} else if (req.startsWith("getLVar")) {
+					String name = req.split(" ",2)[1];
+					FS6Object obj = program.getLocalVars().get(name);
+					if(obj == null) {
+						out.println("-1 null");
+					}else {
+						out.println(obj.getType()+" "+obj.getValue().toString());
+					}
+				} else if (req.startsWith("setLVar")) {
+					String[] parse = req.split(" ",4);
+					String name = parse[1];
+					Integer type = Integer.valueOf(parse[2]);
+					Object value = parse[3];
+					if(type == TypeManager.TYPE_INTEGER) {
+						value = Integer.valueOf(parse[3]);
+					}
+					FS6Object obj = new FS6Object(type,value);
+					program.getLocalVars().put(name, obj);
+				} else if (req.startsWith("getGVar")) {
+					String name = req.split(" ",2)[1];
+					FS6Object obj = program.getGlobalVars().get(name);
+					if(obj == null) {
+						out.println("-1 null");
+					}else {
+						out.println(obj.getType()+" "+obj.getValue().toString());
+					}
+				} else if (req.startsWith("setGVar")) {
+					String[] parse = req.split(" ",4);
+					String name = parse[1];
+					Integer type = Integer.valueOf(parse[2]);
+					Object value = parse[3];
+					if(type == TypeManager.TYPE_INTEGER) {
+						value = Integer.valueOf(parse[3]);
+					}
+					FS6Object obj = new FS6Object(type,value);
+					program.getGlobalVars().put(name, obj);
 				}
 				sending = false;
 			}
