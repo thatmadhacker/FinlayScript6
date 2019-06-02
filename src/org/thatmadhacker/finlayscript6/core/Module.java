@@ -109,8 +109,8 @@ public class Module extends Thread {
 					returnVal = obj;
 				} else if (req.startsWith("modCom")) {
 					String[] parse = req.split(" ", 3);
-					String message = parse[3];
-					String modTo = parse[2];
+					String message = parse[2];
+					String modTo = parse[1];
 					try {
 						program.getEnv().getModule(modTo).send(message);
 					} catch (Exception e) {
