@@ -112,7 +112,7 @@ public class Module extends Thread {
 					String message = parse[2];
 					String modTo = parse[1];
 					try {
-						program.getEnv().getModule(modTo).send(message);
+						program.getEnv().getModule(modTo).send("modCom "+f.getName()+" "+message);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
