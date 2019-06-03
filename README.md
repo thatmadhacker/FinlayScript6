@@ -1,1 +1,1 @@
-# FinlayScript6 - A cross platform JS alternative
+# FinlayScript6 - A cross platform programming language
