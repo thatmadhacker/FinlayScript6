@@ -7,6 +7,7 @@ import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Module extends Thread {
 	public File f;
@@ -14,8 +15,8 @@ public class Module extends Thread {
 	private Scanner in;
 	private PrintWriter out;
 	private Program program;
-	private Lock locked;
-	private Lock sending;
+	private Lock locked = new ReentrantLock();
+	private Lock sending = new ReentrantLock();
 
 	public Module(File f, Program program) {
 		this.f = f;
