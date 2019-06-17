@@ -61,6 +61,12 @@ public class Interpreter {
 	}
 
 	private static int execLine(String line, int index, Program program, Method method) throws Exception {
+		line = line.trim();
+		if (line.startsWith("#import")) {
+			String file = line.replaceFirst("#import", "").trim();
+			program.env.loadFile(file,program);
+			return 0;
+		}
 		if (line.startsWith("#include")) {
 			String module = line.replaceFirst("#include", "").trim();
 			program.env.loadModule(module, program);

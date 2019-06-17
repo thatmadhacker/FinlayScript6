@@ -15,6 +15,7 @@ public class Program {
 	public Environment env;
 	public FS6Object currReturnVal;
 	public boolean returned = false;
+	public Map<String,Program> loadedPrograms = new HashMap<String,Program>();
 	public Program(List<String> lines, Environment env) throws Exception {
 		this.lines = lines;
 		this.env = env;

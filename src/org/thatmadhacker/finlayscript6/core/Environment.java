@@ -6,18 +6,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Environment {
 	
-	private static final String DEFAULT_PATH = "/usr/share/FS6/modules/:$DIR/modules/";
+	private static final String DEFAULT_PATH = ".:modules/:/usr/share/FS6/modules/";
 	private String path;
 	public Map<String,Module> libMethods = new HashMap<String,Module>();
 	public TypeManager typeManager = new TypeManager();
 	public List<Module> modules = new ArrayList<Module>();
 	public static Environment createDefaultEnv() {
-		File dir = new File(".");
-		String path = DEFAULT_PATH.replaceAll("\\$DIR", dir.getPath());
-		return new Environment(path);
+		return new Environment(DEFAULT_PATH);
 	}
 	public Environment(String path) {
 		this.path = path;
@@ -58,5 +57,26 @@ public class Environment {
 			}
 		}
 		throw new Exception("Moduke "+moduleName+" not found!");
+	}
+	/*
+	 * Loads FS6 files for external classes and stuff
+	 */
+	public Program loadFile(String name, Program program) throws Exception {
+		for(String s : path.split(":")) {
+			File f = new File(s,name);
+			if(f.exists()) {
+				Scanner in = new Scanner(f);
+				List<String> lines = new ArrayList<String>();
+				while(in.hasNextLine()) {
+					lines.add(in.nextLine());
+				}
+				in.close();
+				Program p = Interpreter.createProgram(lines, this);
+				Interpreter.setupProgram(p);
+				program.loadedPrograms.put(f.getName(), p);
+				return p;
+			}
+		}
+		throw new FileNotFoundException("Failed to find file "+name+" in path "+path+"!");
 	}
 }
