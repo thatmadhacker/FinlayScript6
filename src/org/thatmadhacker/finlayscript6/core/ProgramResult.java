@@ -8,7 +8,6 @@ public class ProgramResult {
 	public Map<String,FS6Object> localVariables;
 	public FS6Object returnVal;
 	public ProgramResult(int resultCode, Map<String, FS6Object> globalVariables, Map<String,FS6Object> localVariables, FS6Object returnVal) {
-		super();
 		this.resultCode = resultCode;
 		this.globalVariables = globalVariables;
 		this.localVariables = localVariables;

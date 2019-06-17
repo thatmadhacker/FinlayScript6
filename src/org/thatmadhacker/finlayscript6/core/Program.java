@@ -16,7 +16,6 @@ public class Program {
 	public FS6Object currReturnVal;
 	public boolean returned = false;
 	public Program(List<String> lines, Environment env) throws Exception {
-		super();
 		this.lines = lines;
 		this.env = env;
 	}

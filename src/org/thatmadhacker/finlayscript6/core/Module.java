@@ -18,7 +18,6 @@ public class Module extends Thread {
 	private Lock sending;
 
 	public Module(File f, Program program) {
-		super();
 		this.f = f;
 		this.program = program;
 	}

@@ -5,7 +5,6 @@ public class FS6Object {
 	public Object value;
 	public int skip = 0;
 	public FS6Object(int type, Object value) {
-		super();
 		this.type = type;
 		this.value = value;
 	}

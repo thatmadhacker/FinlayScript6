@@ -20,7 +20,6 @@ public class Environment {
 		return new Environment(path);
 	}
 	public Environment(String path) {
-		super();
 		this.path = path;
 	}
 	public Module loadModule(String name, Program p) throws Exception{
