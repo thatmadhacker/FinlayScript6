@@ -40,8 +40,17 @@ public class Interpreter {
 		}
 		throw new Exception("Method not found!");
 	}
+	public static ProgramResult execMethod(String method, Program p, String args) throws Exception {
 
-	private static ProgramResult execMethod(Method method, Program program, String args) throws Exception {
+		for (Method m : p.methods) {
+			if (m.name.equals(method)) {
+				return execMethod(m, p, args);
+			}
+		}
+		throw new Exception("Method not found!");
+	}
+
+	public static ProgramResult execMethod(Method method, Program program, String args) throws Exception {
 		program.returned = false;
 		program.currReturnVal = new FS6Object(TypeManager.TYPE_NONE, null);
 		Map<String, FS6Object> localVars = program.localVars;
@@ -99,7 +108,16 @@ public class Interpreter {
 	}
 
 	private static FS6Object eval(String eval, int line, Program program) throws Exception {
-		if (!eval.contains("(")) {
+		eval = eval.trim();
+		if(program.localVars.containsKey(eval) || program.globalVars.containsKey(eval)) {
+			FS6Object object;
+			if(program.localVars.containsKey(eval)) {
+				object = program.localVars.get(eval);
+			}else {
+				object = program.globalVars.get(eval);
+			}
+			return object;
+		} else if (!eval.contains("(")) {
 			if (isInt(eval)) {
 				return new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(eval));
 			} else {
@@ -207,10 +225,16 @@ public class Interpreter {
 					mArgs2.add(mArgs.get(s));
 				}
 				return program.env.libMethods.get(methodName).execMethod(methodName, mArgs2);
-			} else {
-				throw new Exception("Method " + methodName + " not found!!!");
+			} else if(methodName.split(".").length > 1 && program.loadedPrograms.containsKey(methodName.split(".")[0])) {
+				Program loadedProgram = program.loadedPrograms.get(methodName.split(".")[0]);
+				methodName = methodName.split(".",2)[1];
+				if(loadedProgram.containsMethod(methodName)) {
+					ProgramResult result = Interpreter.execMethod(methodName,program,methodArgs);
+					return result.returnVal;
+				}
 			}
 		}
+		throw new Exception("Line: "+line+" Method " + methodName + " not found!!!");
 	}
 
 	private static Map<String, FS6Object> parseArgs(String args, String methodArgs, Program program) {

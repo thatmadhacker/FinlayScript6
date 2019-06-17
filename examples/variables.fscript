@@ -1,0 +1,7 @@
+test = "hi"
+
+test2 = 2
+test3 = test2
+
+#comments work with this
+//or with this

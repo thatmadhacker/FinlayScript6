@@ -1,9 +1,0 @@
-#include test
-test = "hi"
-testMethod(){
-	global test2 = "test2"
-}
-testMethod()
-test3 = test()
-#comments work with this
-//or with this

@@ -1,0 +1,4 @@
+testMethod(){
+	global test2 = "test2"
+}
+testMethod()

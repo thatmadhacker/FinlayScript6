@@ -135,6 +135,20 @@ public class Module extends Thread {
 					}
 					FS6Object obj = new FS6Object(type,value);
 					program.globalVars.put(name, obj);
+				} else if (req.startsWith("input")) {
+					@SuppressWarnings("resource")
+					Scanner in = new Scanner(System.in);
+					String s = in.nextLine();
+					out.println(s);
+					in = null;
+				} else if (req.startsWith("print")) {
+					while(true) {
+						String s = in.nextLine();
+						if(s.equals("END")) {
+							break;
+						}
+						System.out.println(s);
+					}
 				}
 				sending.unlock();
 			}
