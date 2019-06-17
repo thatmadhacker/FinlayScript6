@@ -11,9 +11,9 @@ public class Environment {
 	
 	private static final String DEFAULT_PATH = "/usr/share/FS6/modules/:$DIR/modules/";
 	private String path;
-	private Map<String,Module> libMethods = new HashMap<String,Module>();
-	private TypeManager typeManager = new TypeManager();
-	private List<Module> modules = new ArrayList<Module>();
+	public Map<String,Module> libMethods = new HashMap<String,Module>();
+	public TypeManager typeManager = new TypeManager();
+	public List<Module> modules = new ArrayList<Module>();
 	public static Environment createDefaultEnv() {
 		File dir = new File(".");
 		String path = DEFAULT_PATH.replaceAll("\\$DIR", dir.getPath());
@@ -52,24 +52,9 @@ public class Environment {
 		}
 		throw new FileNotFoundException("Failed to find module "+name+" in path "+path+"!");
 	}
-	public void addLibMethod(String method, Module module) {
-		libMethods.put(method, module);
-	}
-	public TypeManager getTypeManager() {
-		return typeManager;
-	}
-	public boolean containsLibMethod(String name) {
-		return libMethods.containsKey(name);
-	}
-	public Map<String, Module> getLibMethods() {
-		return libMethods;
-	}
-	public List<Module> getModules() {
-		return modules;
-	}
 	public Module getModule(String moduleName) throws Exception{
 		for(Module m : modules) {
-			if(m.getF().getName().equals(moduleName)) {
+			if(m.f.getName().equals(moduleName)) {
 				return m;
 			}
 		}

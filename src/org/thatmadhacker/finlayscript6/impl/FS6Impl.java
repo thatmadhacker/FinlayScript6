@@ -15,20 +15,20 @@ public class FS6Impl {
 		ProgramResult result = Interpreter.execProgram(program);
 		Interpreter.close(program);
 		System.out.println("Local vars: \n\n");
-		for(String s : result.getLocalVariables().keySet()) {
-			System.out.println("Name: "+s+" Type: "+result.getLocalVariables().get(s).getType()+" - "+
-					program.getEnv().getTypeManager().getTypes().get(result.getLocalVariables().get(s).getType())+
-					" Value: "+result.getLocalVariables().get(s).getValue().toString());
+		for(String s : result.localVariables.keySet()) {
+			System.out.println("Name: "+s+" Type: "+result.localVariables.get(s).type+" - "+
+					program.env.typeManager.types.get(result.localVariables.get(s).type)+
+					" Value: "+result.localVariables.get(s).value.toString());
 		}
 		System.out.println("\n\nGlobal vars: \n\n");
-		for(String s : result.getGlobalVariables().keySet()) {
-			System.out.println("Name: "+s+" Type: "+result.getGlobalVariables().get(s).getType()+" - "+
-					program.getEnv().getTypeManager().getTypes().get(result.getGlobalVariables().get(s).getType())+
-					" Value: "+result.getGlobalVariables().get(s).getValue().toString());
+		for(String s : result.globalVariables.keySet()) {
+			System.out.println("Name: "+s+" Type: "+result.globalVariables.get(s).type+" - "+
+					program.env.typeManager.types.get(result.globalVariables.get(s).type)+
+					" Value: "+result.globalVariables.get(s).value.toString());
 		}
 		System.out.println("\n\nLibrary methods: \n\n");
-		for(String s : program.getEnv().getLibMethods().keySet()) {
-			System.out.println("Name: "+s+" Module: "+program.getEnv().getLibMethods().get(s).getF().getPath());
+		for(String s : program.env.libMethods.keySet()) {
+			System.out.println("Name: "+s+" Module: "+program.env.libMethods.get(s).f.getPath());
 		}
 	}
 }

@@ -33,8 +33,8 @@ public class Interpreter {
 
 	public static ProgramResult execMethod(String method, Program p) throws Exception {
 
-		for (Method m : p.getMethods()) {
-			if (m.getName().equals(method)) {
+		for (Method m : p.methods) {
+			if (m.name.equals(method)) {
 				return execMethod(m, p, "");
 			}
 		}
@@ -42,28 +42,28 @@ public class Interpreter {
 	}
 
 	private static ProgramResult execMethod(Method method, Program program, String args) throws Exception {
-		program.setReturned(false);
-		program.setCurrReturnVal(new FS6Object(TypeManager.TYPE_NONE, null));
-		Map<String, FS6Object> localVars = program.getLocalVars();
-		Map<String,FS6Object> args2 = parseArgs(args, method.getArgs(), program);
-		program.setLocalVars(args2);
-		for (int i = 0; i < method.getLines().size(); i++) {
-			i += execLine(method.getLines().get(i), i, program, method);
-			if (program.isReturned()) {
+		program.returned = false;
+		program.currReturnVal = new FS6Object(TypeManager.TYPE_NONE, null);
+		Map<String, FS6Object> localVars = program.localVars;
+		Map<String,FS6Object> args2 = parseArgs(args, method.args, program);
+		program.localVars = args2;
+		for (int i = 0; i < method.lines.size(); i++) {
+			i += execLine(method.lines.get(i), i, program, method);
+			if (program.returned) {
 				break;
 			}
 		}
-		FS6Object returnVal = program.getCurrReturnVal();
-		ProgramResult result = new ProgramResult(program.getReturnVal(), program.getGlobalVars(),
-				program.getLocalVars(), returnVal);
-		program.setLocalVars(localVars);
+		FS6Object returnVal = program.currReturnVal;
+		ProgramResult result = new ProgramResult(program.returnVal, program.globalVars,
+				program.localVars, returnVal);
+		program.localVars = localVars;
 		return result;
 	}
 
 	private static int execLine(String line, int index, Program program, Method method) throws Exception {
 		if (line.startsWith("#include")) {
 			String module = line.replaceFirst("#include", "").trim();
-			program.getEnv().loadModule(module, program);
+			program.env.loadModule(module, program);
 			return 0;
 		}
 		if (line.startsWith("//") || line.startsWith("#")) {
@@ -81,14 +81,14 @@ public class Interpreter {
 			String eval = line.split("=", 2)[1].trim();
 			FS6Object obj = eval(eval, index, program);
 			if (!global) {
-				program.getLocalVars().put(variable, obj);
+				program.localVars.put(variable, obj);
 			} else {
-				program.getGlobalVars().put(variable, obj);
+				program.globalVars.put(variable, obj);
 			}
-			return obj.getSkip();
+			return obj.skip;
 		} else {
 			FS6Object obj = eval(line, index, program);
-			return obj.getSkip();
+			return obj.skip;
 		}
 	}
 
@@ -111,8 +111,8 @@ public class Interpreter {
 				FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
 				int count = 0;
 				int endLine = -1;
-				for (int i = line; i < program.getLines().size(); i++) {
-					count = adjustCount(program.getLines().get(i), count);
+				for (int i = line; i < program.lines.size(); i++) {
+					count = adjustCount(program.lines.get(i), count);
 					if (count == 0) {
 						endLine = i;
 						break;
@@ -121,7 +121,7 @@ public class Interpreter {
 				if (endLine == -1) {
 					throw new Exception("End bracket not found for if statement on line " + line);
 				}
-				var.setSkip(endLine - line);
+				var.skip = endLine - line;
 				return var;
 			} else if (methodArgs.equals("1")) {
 				FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
@@ -130,8 +130,8 @@ public class Interpreter {
 				FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
 				int count = 0;
 				int endLine = -1;
-				for (int i = line; i < program.getLines().size(); i++) {
-					count = adjustCount(program.getLines().get(i), count);
+				for (int i = line; i < program.lines.size(); i++) {
+					count = adjustCount(program.lines.get(i), count);
 					if (count == 0) {
 						endLine = i;
 						break;
@@ -140,22 +140,22 @@ public class Interpreter {
 				if (endLine == -1) {
 					throw new Exception("End bracket not found for if statement on line " + line);
 				}
-				var.setSkip(endLine - line);
+				var.skip = endLine - line;
 				return var;
 			} else {
 				FS6Object result = eval(methodArgs, -1, program);
-				if (result.getType() == TypeManager.TYPE_STRING) {
-					if (((String) result.getValue()).equalsIgnoreCase("true")) {
+				if (result.type == TypeManager.TYPE_STRING) {
+					if (((String) result.value).equalsIgnoreCase("true")) {
 						FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
 						return var;
 					}
-				} else if (result.getType() == TypeManager.TYPE_INTEGER) {
-					if (((Integer) result.getValue()) == 1) {
+				} else if (result.type == TypeManager.TYPE_INTEGER) {
+					if (((Integer) result.value) == 1) {
 						FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
 						return var;
 					}
-				} else if (result.getType() == TypeManager.TYPE_BOOLEAN) {
-					if (((Boolean) result.getValue()) == true) {
+				} else if (result.type == TypeManager.TYPE_BOOLEAN) {
+					if (((Boolean) result.value) == true) {
 						FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
 						return var;
 					}
@@ -163,8 +163,8 @@ public class Interpreter {
 				FS6Object var = new FS6Object(TypeManager.TYPE_NONE, null);
 				int count = 0;
 				int endLine = -1;
-				for (int i = line; i < program.getLines().size(); i++) {
-					count = adjustCount(program.getLines().get(i), count);
+				for (int i = line; i < program.lines.size(); i++) {
+					count = adjustCount(program.lines.get(i), count);
 					if (count == 0) {
 						endLine = i;
 						break;
@@ -173,7 +173,7 @@ public class Interpreter {
 				if (endLine == -1) {
 					throw new Exception("End bracket not found for if statement on line " + line);
 				}
-				var.setSkip(endLine - line);
+				var.skip = endLine - line;
 				return var;
 			}
 		} else if (methodName.equals("for")) {
@@ -185,10 +185,10 @@ public class Interpreter {
 		} else {
 			if (program.containsMethod(methodName)) {
 				Method method = program.getMethod(methodName);
-				String methodArgs2 = method.getArgs();
+				String methodArgs2 = method.args;
 				ProgramResult result = execMethod(method, program, methodArgs2);
-				return result.getReturnVal();
-			} else if (program.getEnv().containsLibMethod(methodName)) {
+				return result.returnVal;
+			} else if (program.env.libMethods.containsKey(methodName)) {
 				String newMethodArgs = "";
 				for (int i1 = 0; i1 < splitNonQuotesA(methodArgs, ",").length; i1++) {
 					newMethodArgs += i1 + ",";
@@ -200,7 +200,7 @@ public class Interpreter {
 				for (String s : mArgs.keySet()) {
 					mArgs2.add(mArgs.get(s));
 				}
-				return program.getEnv().getLibMethods().get(methodName).execMethod(methodName, mArgs2);
+				return program.env.libMethods.get(methodName).execMethod(methodName, mArgs2);
 			} else {
 				throw new Exception("Method " + methodName + " not found!!!");
 			}
@@ -221,15 +221,15 @@ public class Interpreter {
 			String curr = "";
 			int type = -1;
 			for (String s : args3) {
-				boolean localVariable = program.getLocalVars().containsKey(s);
-				boolean globalVariable = program.getGlobalVars().containsKey(s);
+				boolean localVariable = program.localVars.containsKey(s);
+				boolean globalVariable = program.globalVars.containsKey(s);
 				if (s.contains("(")) {
 
 					String methodName = s.split("\\(")[0];
 					String argsString = s.split("\\(")[1];
 					argsString = argsString.substring(0, argsString.lastIndexOf(")"));
 
-					if (program.getEnv().getLibMethods().containsKey(methodName)) {
+					if (program.env.libMethods.containsKey(methodName)) {
 						String newMethodArgs = "";
 						for (int i1 = 0; i1 < splitNonQuotesA(argsString, ",").length; i1++) {
 							newMethodArgs += i1 + ",";
@@ -240,60 +240,60 @@ public class Interpreter {
 						for (String s1 : methodArgs3.keySet()) {
 							mArgs2.add(methodArgs3.get(s1));
 						}
-						FS6Object var = program.getEnv().getLibMethods().get(methodName).execMethod(methodName, mArgs2);
+						FS6Object var = program.env.libMethods.get(methodName).execMethod(methodName, mArgs2);
 						curr += var;
-						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 							type = TypeManager.TYPE_STRING;
 						} else if (type == -1) {
-							type = var.getType();
+							type = var.type;
 						}
 					}else{
 						try {
 							ProgramResult result = execMethod(program.getMethod(methodName), program,argsString);
-							FS6Object var = result.getReturnVal();
+							FS6Object var = result.returnVal;
 							curr += var;
-							if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+							if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 								type = TypeManager.TYPE_STRING;
 							} else if (type == -1) {
-								type = var.getType();
+								type = var.type;
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					}
 				} else if (localVariable) {
-					FS6Object var = program.getLocalVars().get(arg);
+					FS6Object var = program.localVars.get(arg);
 					curr += var;
-					if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+					if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 						type = TypeManager.TYPE_STRING;
 					} else if (type == -1) {
-						type = var.getType();
+						type = var.type;
 					}
 				} else if (globalVariable) {
-					FS6Object var = program.getGlobalVars().get(arg);
+					FS6Object var = program.globalVars.get(arg);
 					curr += var;
-					if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+					if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 						type = TypeManager.TYPE_STRING;
 					} else if (type == -1) {
-						type = var.getType();
+						type = var.type;
 					}
 				} else {
 					boolean integer = isInt(arg);
 					if (integer) {
 						FS6Object var = new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(arg));
 						curr += var;
-						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 							type = TypeManager.TYPE_STRING;
 						} else if (type == -1) {
-							type = var.getType();
+							type = var.type;
 						}
 					} else {
 						FS6Object var = new FS6Object(TypeManager.TYPE_STRING, arg.replaceAll("\"", ""));
 						curr += var;
-						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.getType() != type) {
+						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 							type = TypeManager.TYPE_STRING;
 						} else if (type == -1) {
-							type = var.getType();
+							type = var.type;
 						}
 					}
 				}
@@ -351,19 +351,19 @@ public class Interpreter {
 	}
 
 	public static void setupProgram(Program p) throws Exception {
-		p.getMethods().clear();
+		p.methods.clear();
 		List<String> nonMethodLines = new ArrayList<String>();
 		int count = 0;
-		for (int i = 0; i < p.getLines().size(); i++) {
-			String line = p.getLines().get(i);
+		for (int i = 0; i < p.lines.size(); i++) {
+			String line = p.lines.get(i);
 			if (count == 0 && line.contains("{")) {
 				String name = line.split("\\(", 2)[0].trim();
 				String args = line.split("\\(", 2)[1].trim();
 				args = args.substring(0, args.lastIndexOf(")"));
 				count = adjustCount(line, count);
 				int endLine = -1;
-				for (int i1 = i + 1; i1 < p.getLines().size(); i1++) {
-					count = adjustCount(p.getLines().get(i1), count);
+				for (int i1 = i + 1; i1 < p.lines.size(); i1++) {
+					count = adjustCount(p.lines.get(i1), count);
 					if (count == 0) {
 						endLine = i1;
 						break;
@@ -374,10 +374,10 @@ public class Interpreter {
 				}
 				List<String> lines = new ArrayList<String>();
 				for (int i1 = i + 1; i1 < endLine; i1++) {
-					lines.add(p.getLines().get(i1));
+					lines.add(p.lines.get(i1));
 				}
 				Method method = new Method(lines, name, args);
-				p.getMethods().add(method);
+				p.methods.add(method);
 				count = 0;
 				i += lines.size() + 1;
 				continue;
@@ -387,7 +387,7 @@ public class Interpreter {
 			count = adjustCount(line, count);
 		}
 		Method main = new Method(nonMethodLines, "", "");
-		p.getMethods().add(main);
+		p.methods.add(main);
 	}
 
 	private static int adjustCount(String line, int count) {
@@ -403,7 +403,7 @@ public class Interpreter {
 	}
 
 	public static void close(Program program) {
-		for (Module m : program.getEnv().getModules()) {
+		for (Module m : program.env.modules) {
 			try {
 				m.close();
 			} catch (Exception e) {

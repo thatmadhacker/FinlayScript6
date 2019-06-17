@@ -6,15 +6,16 @@ import java.io.PrintWriter;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.locks.Lock;
 
 public class Module extends Thread {
-	private File f;
+	public File f;
 	private Process childProc;
 	private Scanner in;
 	private PrintWriter out;
 	private Program program;
-	// Thread safety
-	private boolean locked = false;
+	private Lock locked;
+	private Lock sending;
 
 	public Module(File f, Program program) {
 		super();
@@ -22,9 +23,6 @@ public class Module extends Thread {
 		this.program = program;
 	}
 
-	public File getF() {
-		return f;
-	}
 
 	public void init() throws IOException {
 		ProcessBuilder builder = new ProcessBuilder(f.getAbsolutePath());
@@ -38,33 +36,25 @@ public class Module extends Thread {
 			if (method.equals("END")) {
 				break;
 			}
-			program.getEnv().addLibMethod(method, this);
+			program.env.libMethods.put(method, this);
 		}
 		start();
 	}
 
 	private FS6Object returnVal = null;
-	private boolean sending = false;
 
 	public FS6Object execMethod(String method, List<FS6Object> args) {
-		while (locked || sending) {
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		locked = true;
-		sending = true;
+		locked.lock();
+		sending.lock();
 		returnVal = null;
 
 		out.println(method);
 		for (FS6Object o : args) {
-			out.println(o.getType() + " " + o.getValue().toString().replaceAll("\n", "\\n"));
+			out.println(o.type + " " + o.value.toString().replaceAll("\n", "\\n"));
 		}
 		out.println("END");
 
-		sending = false;
+		sending.unlock();
 
 		while (returnVal == null) {
 			try {
@@ -73,10 +63,10 @@ public class Module extends Thread {
 				e.printStackTrace();
 			}
 		}
-		FS6Object obj = new FS6Object(returnVal.getType(), returnVal.getValue());
-		obj.setSkip(returnVal.getSkip());
+		FS6Object obj = new FS6Object(returnVal.type, returnVal.value);
+		obj.skip = returnVal.skip;
 		returnVal = null;
-		locked = false;
+		locked.unlock();
 		return obj;
 	}
 
@@ -86,17 +76,10 @@ public class Module extends Thread {
 		while (childProc.isAlive()) {
 			if (in.hasNext()) {
 				String req = in.nextLine();
-				while (sending) {
-					try {
-						Thread.sleep(1);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				sending = true;
+				sending.lock();
 				if (req.startsWith("allocType")) {
 					String name = req.replaceFirst("allocType", "").trim();
-					int type = program.getEnv().getTypeManager().allocType(name);
+					int type = program.env.typeManager.allocType(name);
 					out.println(type);
 				} else if (req.startsWith("return")) {
 					String data = req.replaceFirst("return", "").trim();
@@ -105,24 +88,24 @@ public class Module extends Thread {
 					int type = Integer.valueOf(s[1]);
 					int skip = Integer.valueOf(s[2]);
 					FS6Object obj = new FS6Object(type, value);
-					obj.setSkip(skip);
+					obj.skip = skip;
 					returnVal = obj;
 				} else if (req.startsWith("modCom")) {
 					String[] parse = req.split(" ", 3);
 					String message = parse[2];
 					String modTo = parse[1];
 					try {
-						program.getEnv().getModule(modTo).send("modCom "+f.getName()+" "+message);
+						program.env.getModule(modTo).send("modCom "+f.getName()+" "+message);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else if (req.startsWith("getLVar")) {
 					String name = req.split(" ",2)[1];
-					FS6Object obj = program.getLocalVars().get(name);
+					FS6Object obj = program.localVars.get(name);
 					if(obj == null) {
 						out.println("-1 null");
 					}else {
-						out.println(obj.getType()+" "+obj.getValue().toString());
+						out.println(obj.type+" "+obj.value.toString());
 					}
 				} else if (req.startsWith("setLVar")) {
 					String[] parse = req.split(" ",4);
@@ -133,14 +116,14 @@ public class Module extends Thread {
 						value = Integer.valueOf(parse[3]);
 					}
 					FS6Object obj = new FS6Object(type,value);
-					program.getLocalVars().put(name, obj);
+					program.localVars.put(name, obj);
 				} else if (req.startsWith("getGVar")) {
 					String name = req.split(" ",2)[1];
-					FS6Object obj = program.getGlobalVars().get(name);
+					FS6Object obj = program.globalVars.get(name);
 					if(obj == null) {
 						out.println("-1 null");
 					}else {
-						out.println(obj.getType()+" "+obj.getValue().toString());
+						out.println(obj.type+" "+obj.value.toString());
 					}
 				} else if (req.startsWith("setGVar")) {
 					String[] parse = req.split(" ",4);
@@ -151,9 +134,9 @@ public class Module extends Thread {
 						value = Integer.valueOf(parse[3]);
 					}
 					FS6Object obj = new FS6Object(type,value);
-					program.getGlobalVars().put(name, obj);
+					program.globalVars.put(name, obj);
 				}
-				sending = false;
+				sending.unlock();
 			}
 			try {
 				Thread.sleep(1);
@@ -169,18 +152,11 @@ public class Module extends Thread {
 	}
 
 	public void send(String message) {
-		while (locked || sending) {
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		locked = true;
-		sending = true;
+		locked.lock();
+		sending.lock();
 		out.println(message);
-		sending = false;
-		locked = false;
+		sending.unlock();
+		locked.unlock();
 	}
 
 	public void close() {
