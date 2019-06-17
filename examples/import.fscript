@@ -1,0 +1,4 @@
+//Imports the methods example
+#import examples/methods.fscript
+
+test123 = methods.testMethod()

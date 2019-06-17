@@ -1,7 +1,8 @@
+//Creates a variable with the string value of "hi"
 test = "hi"
 
+#Creates a variable with the integer value of 2
 test2 = 2
-test3 = test2
 
-#comments work with this
-//or with this
+#Creates a variable equal to test2's value
+test3 = test2

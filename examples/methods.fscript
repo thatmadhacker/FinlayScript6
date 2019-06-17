@@ -1,4 +1,7 @@
+//Defines a method named testMethod
 testMethod(){
+	#Defines a global variable
 	global test2 = "test2"
 }
+//Calls the method named testMethod
 testMethod()

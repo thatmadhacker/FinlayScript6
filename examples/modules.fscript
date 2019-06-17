@@ -1,0 +1,5 @@
+//Imports the module named test
+#include test
+
+#Creates a variable from the output of calling the test method from the test module
+moduleTest = test()

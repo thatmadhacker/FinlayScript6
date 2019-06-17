@@ -225,9 +225,9 @@ public class Interpreter {
 					mArgs2.add(mArgs.get(s));
 				}
 				return program.env.libMethods.get(methodName).execMethod(methodName, mArgs2);
-			} else if(methodName.split(".").length > 1 && program.loadedPrograms.containsKey(methodName.split(".")[0])) {
-				Program loadedProgram = program.loadedPrograms.get(methodName.split(".")[0]);
-				methodName = methodName.split(".",2)[1];
+			} else if(methodName.split("\\.").length > 1 && program.loadedPrograms.containsKey(methodName.split("\\.")[0])) {
+				Program loadedProgram = program.loadedPrograms.get(methodName.split("\\.")[0]);
+				methodName = methodName.split("\\.",2)[1];
 				if(loadedProgram.containsMethod(methodName)) {
 					ProgramResult result = Interpreter.execMethod(methodName,program,methodArgs);
 					return result.returnVal;
