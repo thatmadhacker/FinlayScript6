@@ -23,10 +23,6 @@ public class Environment {
 	}
 	public Module loadModule(String name, Program p) throws Exception{
 		String[] pathS = path.split(":");
-		if(pathS.length == 0) {
-			pathS = new String[] {path};
-		}
-		
 		for(String s : pathS) {
 			File dir = new File(s);
 			
@@ -61,7 +57,7 @@ public class Environment {
 	/*
 	 * Loads FS6 files for external classes and stuff
 	 */
-	public Program loadFile(String name, Program program) throws Exception {
+	public Program loadFile(String name, Program program, String programName) throws Exception {
 		for(String s : path.split(":")) {
 			File f = new File(s,name);
 			if(f.exists()) {
@@ -73,7 +69,7 @@ public class Environment {
 				in.close();
 				Program p = Interpreter.createProgram(lines, this);
 				Interpreter.setupProgram(p);
-				program.loadedPrograms.put(f.getName(), p);
+				program.loadedPrograms.put(programName, p);
 				return p;
 			}
 		}

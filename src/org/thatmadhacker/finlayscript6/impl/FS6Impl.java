@@ -49,15 +49,23 @@ public class FS6Impl {
 		if (verbose) {
 			System.out.println("Local vars: \n\n");
 			for (String s : result.localVariables.keySet()) {
+				Object value = result.localVariables.get(s).value;
+				String val = "null";
+				if(value != null)
+					val = value.toString();
 				System.out.println("Name: " + s + " Type: " + result.localVariables.get(s).type + " - "
 						+ program.env.typeManager.types.get(result.localVariables.get(s).type) + " Value: "
-						+ result.localVariables.get(s).value.toString());
+						+ val);
 			}
 			System.out.println("\n\nGlobal vars: \n\n");
 			for (String s : result.globalVariables.keySet()) {
+				Object value = result.globalVariables.get(s).value;
+				String val = "null";
+				if(value != null)
+					val = value.toString();
 				System.out.println("Name: " + s + " Type: " + result.globalVariables.get(s).type + " - "
 						+ program.env.typeManager.types.get(result.globalVariables.get(s).type) + " Value: "
-						+ result.globalVariables.get(s).value.toString());
+						+ val);
 			}
 			System.out.println("\n\nLibrary methods: \n\n");
 			for (String s : program.env.libMethods.keySet()) {

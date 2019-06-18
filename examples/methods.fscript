@@ -2,6 +2,7 @@
 testMethod(){
 	#Defines a global variable
 	global test2 = "test2"
+	return 4
 }
 //Calls the method named testMethod
-testMethod()
+t = testMethod()

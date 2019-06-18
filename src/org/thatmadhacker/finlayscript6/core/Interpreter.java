@@ -40,10 +40,12 @@ public class Interpreter {
 		}
 		throw new Exception("Method not found!");
 	}
+
 	public static ProgramResult execMethod(String method, Program p, String args) throws Exception {
 
 		for (Method m : p.methods) {
 			if (m.name.equals(method)) {
+				System.out.println();
 				return execMethod(m, p, args);
 			}
 		}
@@ -54,7 +56,7 @@ public class Interpreter {
 		program.returned = false;
 		program.currReturnVal = new FS6Object(TypeManager.TYPE_NONE, null);
 		Map<String, FS6Object> localVars = program.localVars;
-		Map<String,FS6Object> args2 = parseArgs(args, method.args, program);
+		Map<String, FS6Object> args2 = parseArgs(args, method.args, program);
 		program.localVars = args2;
 		for (int i = 0; i < method.lines.size(); i++) {
 			i += execLine(method.lines.get(i), i, program, method);
@@ -63,8 +65,7 @@ public class Interpreter {
 			}
 		}
 		FS6Object returnVal = program.currReturnVal;
-		ProgramResult result = new ProgramResult(program.returnVal, program.globalVars,
-				program.localVars, returnVal);
+		ProgramResult result = new ProgramResult(program.returnVal, program.globalVars, program.localVars, returnVal);
 		program.localVars = localVars;
 		return result;
 	}
@@ -73,7 +74,9 @@ public class Interpreter {
 		line = line.trim();
 		if (line.startsWith("#import")) {
 			String file = line.replaceFirst("#import", "").trim();
-			program.env.loadFile(file,program);
+			String as = file.split(" as ")[1].trim();
+			file = file.split(" as ")[0].trim();
+			program.env.loadFile(file, program, as);
 			return 0;
 		}
 		if (line.startsWith("#include")) {
@@ -82,6 +85,12 @@ public class Interpreter {
 			return 0;
 		}
 		if (line.startsWith("//") || line.startsWith("#")) {
+			return 0;
+		}
+		if(line.startsWith("return")) {
+			FS6Object eval = eval(line.substring(6).trim(),index,program);
+			program.currReturnVal = eval;
+			program.returned = true;
 			return 0;
 		}
 		if (line.contains("=")) {
@@ -109,11 +118,11 @@ public class Interpreter {
 
 	private static FS6Object eval(String eval, int line, Program program) throws Exception {
 		eval = eval.trim();
-		if(program.localVars.containsKey(eval) || program.globalVars.containsKey(eval)) {
+		if (program.localVars.containsKey(eval) || program.globalVars.containsKey(eval)) {
 			FS6Object object;
-			if(program.localVars.containsKey(eval)) {
+			if (program.localVars.containsKey(eval)) {
 				object = program.localVars.get(eval);
-			}else {
+			} else {
 				object = program.globalVars.get(eval);
 			}
 			return object;
@@ -217,7 +226,7 @@ public class Interpreter {
 				for (int i1 = 0; i1 < splitNonQuotesA(methodArgs, ",").length; i1++) {
 					newMethodArgs += i1 + ",";
 				}
-				if(newMethodArgs.length() > 0)
+				if (newMethodArgs.length() > 0)
 					newMethodArgs = newMethodArgs.substring(0, newMethodArgs.length() - 1);
 				Map<String, FS6Object> mArgs = parseArgs(methodArgs, newMethodArgs, program);
 				List<FS6Object> mArgs2 = new ArrayList<FS6Object>();
@@ -225,16 +234,17 @@ public class Interpreter {
 					mArgs2.add(mArgs.get(s));
 				}
 				return program.env.libMethods.get(methodName).execMethod(methodName, mArgs2);
-			} else if(methodName.split("\\.").length > 1 && program.loadedPrograms.containsKey(methodName.split("\\.")[0])) {
+			} else if (methodName.split("\\.").length > 1
+					&& program.loadedPrograms.containsKey(methodName.split("\\.")[0].trim())) {
 				Program loadedProgram = program.loadedPrograms.get(methodName.split("\\.")[0]);
-				methodName = methodName.split("\\.",2)[1];
-				if(loadedProgram.containsMethod(methodName)) {
-					ProgramResult result = Interpreter.execMethod(methodName,program,methodArgs);
+				methodName = methodName.split("\\.", 2)[1];
+				if (loadedProgram.containsMethod(methodName)) {
+					ProgramResult result = Interpreter.execMethod(methodName, loadedProgram, methodArgs);
 					return result.returnVal;
 				}
 			}
 		}
-		throw new Exception("Line: "+line+" Method " + methodName + " not found!!!");
+		throw new Exception("Line: " + line + " Method " + methodName + " not found!!!");
 	}
 
 	private static Map<String, FS6Object> parseArgs(String args, String methodArgs, Program program) {
@@ -277,9 +287,9 @@ public class Interpreter {
 						} else if (type == -1) {
 							type = var.type;
 						}
-					}else{
+					} else {
 						try {
-							ProgramResult result = execMethod(program.getMethod(methodName), program,argsString);
+							ProgramResult result = execMethod(program.getMethod(methodName), program, argsString);
 							FS6Object var = result.returnVal;
 							curr += var;
 							if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
