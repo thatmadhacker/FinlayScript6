@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class Environment {
 	
-	private static final String DEFAULT_PATH = ".:modules/:/usr/share/FS6/modules/";
+	private static final String DEFAULT_PATH = ".:modules/:/usr/lib/FS6/modules/";
 	private String path;
 	public Map<String,Module> libMethods = new HashMap<String,Module>();
 	public TypeManager typeManager = new TypeManager();
