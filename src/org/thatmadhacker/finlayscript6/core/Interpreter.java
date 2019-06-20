@@ -59,7 +59,7 @@ public class Interpreter {
 		Map<String, FS6Object> args2 = parseArgs(args, method.args, program);
 		program.localVars = args2;
 		for (int i = 0; i < method.lines.size(); i++) {
-			i += execLine(method.lines.get(i), i, program, method);
+			i += execLine(method.lines.get(i), i, program);
 			if (program.returned) {
 				break;
 			}
@@ -70,7 +70,7 @@ public class Interpreter {
 		return result;
 	}
 
-	private static int execLine(String line, int index, Program program, Method method) throws Exception {
+	private static int execLine(String line, int index, Program program) throws Exception {
 		line = line.trim();
 		if (line.startsWith("#import")) {
 			String file = line.replaceFirst("#import", "").trim();
@@ -210,11 +210,51 @@ public class Interpreter {
 				return var;
 			}
 		} else if (methodName.equals("for")) {
-			// TODO: for logic
-			return null;
+			
+			String[] parse = methodArgs.split(";");
+			
+			int count = 0;
+			int endLine = -1;
+			for(int i = line; i < program.lines.size(); i++) {
+				count = adjustCount(program.lines.get(i), count);
+				if(count <= 0) {
+					endLine = i;
+					break;
+				}
+			}
+			if(endLine == -1) {
+				throw new Exception("End bracket not found for for statement on line "+ line);
+			}
+			
+			execLine(parse[0], line, program);
+			while(eval(parse[3], line, program).isTrue()) {
+				for(int i = line+1; i < endLine-1; i++) {
+					execLine(program.lines.get(i), i, program);
+				}
+				execLine(parse[2], line, program);
+			}
+			
 		} else if (methodName.equals("while")) {
-			// TODO: while logic
-			return null;
+			
+			int count = 0;
+			int endLine = -1;
+			for(int i = line; i < program.lines.size(); i++) {
+				count = adjustCount(program.lines.get(i), count);
+				if(count <= 0) {
+					endLine = i;
+					break;
+				}
+			}
+			if(endLine == -1) {
+				throw new Exception("End bracket not found for while statement on line "+ line);
+			}
+			
+			while(eval(methodArgs, line, program).isTrue()) {
+				for(int i = line+1; i < endLine-1; i++) {
+					 execLine(program.lines.get(i), line, program);
+				}
+			}
+			
 		} else {
 			if (program.containsMethod(methodName)) {
 				Method method = program.getMethod(methodName);

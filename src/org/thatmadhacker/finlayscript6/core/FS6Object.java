@@ -8,4 +8,9 @@ public class FS6Object {
 		this.type = type;
 		this.value = value;
 	}
+	public boolean isTrue() {
+		if(type != TypeManager.TYPE_BOOLEAN)
+			return false;
+		return (boolean) value;
+	}
 }
