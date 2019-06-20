@@ -128,7 +128,7 @@ public class Interpreter {
 			return object;
 		} else if (!eval.contains("(")) {
 			if (isInt(eval)) {
-				return new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(eval));
+				return new FS6Object(TypeManager.TYPE_INTEGER, Long.valueOf(eval));
 			} else {
 				return new FS6Object(TypeManager.TYPE_STRING, eval.replaceAll("\"", ""));
 			}
@@ -368,7 +368,7 @@ public class Interpreter {
 				} else {
 					boolean integer = isInt(arg);
 					if (integer) {
-						FS6Object var = new FS6Object(TypeManager.TYPE_INTEGER, Integer.valueOf(arg));
+						FS6Object var = new FS6Object(TypeManager.TYPE_INTEGER, Long.valueOf(arg));
 						curr += var;
 						if (!(type == TypeManager.TYPE_STRING) && type != -1 && var.type != type) {
 							type = TypeManager.TYPE_STRING;
@@ -388,7 +388,7 @@ public class Interpreter {
 			}
 			Object curr1;
 			if (type == TypeManager.TYPE_INTEGER) {
-				curr1 = Integer.valueOf(curr);
+				curr1 = Long.valueOf(curr);
 			} else {
 				curr1 = curr;
 			}
@@ -400,7 +400,7 @@ public class Interpreter {
 	@SuppressWarnings("unused")
 	static boolean isInt(String s) {
 		try {
-			int i = Integer.valueOf(s);
+			int i = Long.valueOf(s);
 			return true;
 		} catch (NumberFormatException e) {
 			return false;
