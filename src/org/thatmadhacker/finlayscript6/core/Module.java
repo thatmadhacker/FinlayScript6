@@ -149,6 +149,9 @@ public class Module extends Thread {
 						}
 						System.out.println(s);
 					}
+				} else if(req.startsWith("error")) {
+					System.out.println(in.nextLine());
+					System.exit(1);
 				}
 				sending.unlock();
 			}
