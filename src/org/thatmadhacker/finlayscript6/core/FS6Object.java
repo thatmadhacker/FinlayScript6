@@ -12,7 +12,7 @@ public class FS6Object {
 		if(type == TypeManager.TYPE_BOOLEAN) {
 			return (boolean) value;
 		}else if(type == TypeManager.TYPE_INTEGER) {
-			int i = (int) value;
+			long i = (long) value;
 			return i == 1 ? true : false;
 		}else if(type == TypeManager.TYPE_STRING) {
 			String s = (String) value;
