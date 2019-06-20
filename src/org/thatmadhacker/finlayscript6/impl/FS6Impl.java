@@ -24,7 +24,7 @@ public class FS6Impl {
 			}
 		}
 		Scanner in = null;
-		if (file == null) {
+		if (System.console() == null) {
 			in = new Scanner(System.in);
 			while (true) {
 				System.out.print("> ");
