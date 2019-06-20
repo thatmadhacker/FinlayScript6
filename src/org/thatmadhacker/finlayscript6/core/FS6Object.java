@@ -9,8 +9,15 @@ public class FS6Object {
 		this.value = value;
 	}
 	public boolean isTrue() {
-		if(type != TypeManager.TYPE_BOOLEAN)
-			return false;
-		return (boolean) value;
+		if(type == TypeManager.TYPE_BOOLEAN) {
+			return (boolean) value;
+		}else if(type == TypeManager.TYPE_INTEGER) {
+			int i = (int) value;
+			return i == 1 ? true : false;
+		}else if(type == TypeManager.TYPE_STRING) {
+			String s = (String) value;
+			return s.equalsIgnoreCase("true") ? true : false;
+		}
+		return false;
 	}
 }
