@@ -400,7 +400,7 @@ public class Interpreter {
 	@SuppressWarnings("unused")
 	static boolean isInt(String s) {
 		try {
-			int i = Long.valueOf(s);
+			long i = Long.valueOf(s);
 			return true;
 		} catch (NumberFormatException e) {
 			return false;
