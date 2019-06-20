@@ -59,7 +59,7 @@ public class Interpreter {
 		Map<String, FS6Object> args2 = parseArgs(args, method.args, program);
 		program.localVars = args2;
 		for (int i = 0; i < method.lines.size(); i++) {
-			i += execLine(method.lines.get(i), i, program, method);
+			i += execLine(method.lines.get(i), i, program);
 			if (program.returned) {
 				break;
 			}
@@ -70,7 +70,7 @@ public class Interpreter {
 		return result;
 	}
 
-	private static int execLine(String line, int index, Program program, Method method) throws Exception {
+	private static int execLine(String line, int index, Program program) throws Exception {
 		line = line.trim();
 		if (line.startsWith("#import")) {
 			String file = line.replaceFirst("#import", "").trim();
@@ -93,7 +93,7 @@ public class Interpreter {
 			program.returned = true;
 			return 0;
 		}
-		if (line.contains("=")) {
+		if (line.contains("=") && !line.startsWith("if") && !line.startsWith("for") && !line.startsWith("while")) {
 			String variable = line.split("=", 2)[0].trim();
 			boolean global = false;
 			if (variable.split(" ", 2).length > 1) {
@@ -210,11 +210,59 @@ public class Interpreter {
 				return var;
 			}
 		} else if (methodName.equals("for")) {
-			// TODO: for logic
-			return null;
+			
+			String[] parse = methodArgs.split(";");
+			
+			int count = 0;
+			int endLine = -1;
+			for(int i = line; i < program.lines.size(); i++) {
+				count = adjustCount(program.lines.get(i), count);
+				if(count <= 0) {
+					endLine = i;
+					break;
+				}
+			}
+			if(endLine == -1) {
+				throw new Exception("End bracket not found for for statement on line "+ line);
+			}
+			
+			execLine(parse[0], line, program);
+			boolean b = eval(parse[1], line, program).isTrue();
+			while(b) {
+				for(int i = line+1; i < endLine-1; i++) {
+					execLine(program.lines.get(i), i, program);
+				}
+				execLine(parse[2], line, program);
+				b = eval(parse[1], line, program).isTrue();
+			}
+			FS6Object var = new FS6Object(TypeManager.TYPE_NONE,null);
+			var.skip = endLine-line+1;
+			return var;
+			
 		} else if (methodName.equals("while")) {
-			// TODO: while logic
-			return null;
+			
+			int count = 0;
+			int endLine = -1;
+			for(int i = line; i < program.lines.size(); i++) {
+				count = adjustCount(program.lines.get(i), count);
+				if(count <= 0) {
+					endLine = i;
+					break;
+				}
+			}
+			if(endLine == -1) {
+				throw new Exception("End bracket not found for while statement on line "+ line);
+			}
+			
+			while(eval(methodArgs, line, program).isTrue()) {
+				for(int i = line+1; i < endLine-1; i++) {
+					 execLine(program.lines.get(i), line, program);
+				}
+			}
+			FS6Object var = new FS6Object(TypeManager.TYPE_NONE,null);
+			var.skip = endLine-line+1;
+			return var;
+			
 		} else {
 			if (program.containsMethod(methodName)) {
 				Method method = program.getMethod(methodName);
@@ -411,6 +459,24 @@ public class Interpreter {
 				}
 				if (endLine == -1) {
 					throw new Exception("Closing bracket not found for method declaration on line " + (i + 1));
+				}
+				if(name.equals("if") || name.equals("for") || name.equals("while")) {
+					boolean found = false;
+					for(Method m : p.methods) {
+						for(String s : m.lines) {
+							if(s.equals(line)) {
+								found = true;
+								break;
+							}
+						}
+					}
+					if(!found) {
+						for(int i1 = i; i1 < endLine+1; i1++) {
+							nonMethodLines.add(p.lines.get(i1));
+						}
+					}
+					i = endLine;
+					continue;
 				}
 				List<String> lines = new ArrayList<String>();
 				for (int i1 = i + 1; i1 < endLine; i1++) {
